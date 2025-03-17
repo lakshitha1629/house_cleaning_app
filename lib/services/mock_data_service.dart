@@ -1,23 +1,25 @@
 import 'package:house_cleaning_app/models/user.dart';
 import 'package:house_cleaning_app/models/house.dart';
-import 'dart:math';
 
 class MockDataService {
-  // Singleton pattern (optional)
   static final MockDataService _instance = MockDataService._internal();
   factory MockDataService() => _instance;
   MockDataService._internal();
 
-  // In-memory lists for users and houses
   final List<User> _users = [];
   final List<House> _houses = [];
-
-  // Currently logged in user
   User? currentUser;
 
-  // Simulate loading some JSON data at startup
+  // NEW: Store some mock notifications
+  final List<Map<String, String>> _notifications = [];
+
+  // Return notifications for a specific user
+  List<Map<String, String>> getNotificationsForUser(String userId) {
+    return _notifications.where((n) => n['userId'] == userId).toList();
+  }
+
   void initializeMockData() {
-    // Add some default users (customers & cleaners)
+    // Add some default users
     _users.addAll([
       User(
         id: 'u1',
@@ -27,8 +29,8 @@ class MockDataService {
         password: '123',
         contactNumber: '123-456-7890',
         address: '123 Main St',
-        pictureUrl: 'https://cdn.iconscout.com/icon/free/png-256/free-user-icon-download-in-svg-png-gif-file-formats--profile-avatar-account-person-app-interface-pack-icons-1401302.png',
-      ),
+        pictureUrl: 'https://d2qp0siotla746.cloudfront.net/img/use-cases/profile-picture/template_0.jpg',
+     ),
       User(
         id: 'u2',
         name: 'Bob Cleaner',
@@ -37,7 +39,7 @@ class MockDataService {
         password: '123',
         contactNumber: '987-654-3210',
         address: '456 Side St',
-        pictureUrl: 'https://cdn.iconscout.com/icon/free/png-256/free-user-icon-download-in-svg-png-gif-file-formats--profile-avatar-account-person-app-interface-pack-icons-1401302.png',
+        pictureUrl: 'https://d2qp0siotla746.cloudfront.net/img/use-cases/profile-picture/template_3.jpg',
       ),
     ]);
 
@@ -73,18 +75,71 @@ class MockDataService {
         payment: 60.0,
         ownerId: 'u1',
         imageUrls: [
-          'https://media-cdn.tripadvisor.com/media/photo-s/2c/b0/b6/2b/apartment-hotels.jpg',
           'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSagfZcNvESS-xuuzqBMOn124U07WyjRrxzpQ&s',
+          'https://media-cdn.tripadvisor.com/media/photo-s/2c/b0/b6/2b/apartment-hotels.jpg',
+        ],
+      ),
+       House(
+        id: 'h3',
+        title: '2-Bedroom House (Available)',
+        rooms: 2,
+        bathrooms: 1,
+        kitchen: true,
+        garage: false,
+        flooringType: 'Wood',
+        address: '789 Another St',
+        location: 'Chicago',
+        payment: 80.0,
+        ownerId: 'u1',
+        imageUrls: [
+          'https://via.placeholder.com/400?text=House3A',
         ],
       ),
     ]);
+
+    // Make h1 ongoing (accepted by Bob but not finished)
+    _houses[0].acceptedBy = 'u2'; 
+    _houses[0].isFinished = false;
+    _houses[0].messages.addAll([
+      {'senderId': 'u1', 'text': 'Hello, can you clean my house?'},
+      {'senderId': 'u2', 'text': 'Sure, see you at 10 AM.'},
+    ]);
+
+    // Make h2 completed (accepted by Bob, finished)
+    _houses[1].acceptedBy = 'u2';
+    _houses[1].isFinished = true;
+    _houses[1].messages.addAll([
+      {'senderId': 'u1', 'text': 'Thanks for cleaning!'},
+      {'senderId': 'u2', 'text': 'My pleasure!'},
+    ]);
+
+    // Mock notifications
+    _notifications.addAll([
+      {
+        'id': 'n1',
+        'userId': 'u1',
+        'title': 'Job Accepted',
+        'message': 'Bob accepted your cleaning request for Cozy 3-Bedroom House',
+      },
+      {
+        'id': 'n2',
+        'userId': 'u1',
+        'title': 'Job Completed',
+        'message': 'Bob has completed cleaning 1-Bedroom Apartment',
+      },
+      {
+        'id': 'n3',
+        'userId': 'u2',
+        'title': 'New Job Posted',
+        'message': 'Alice posted a new job: Cozy 3-Bedroom House',
+      },
+    ]);
   }
 
-  // Get read-only lists
+  // getters
   List<User> get allUsers => _users;
   List<House> get allHouses => _houses;
 
-  // Sign In
   bool signIn(String username, String password) {
     final user = _users.firstWhere(
       (u) => u.username == username && u.password == password,
@@ -106,7 +161,6 @@ class MockDataService {
     return false;
   }
 
-  // Sign Up
   bool signUp({
     required String name,
     required String role,
@@ -116,7 +170,6 @@ class MockDataService {
     required String address,
     required String pictureUrl,
   }) {
-    // Check if username already exists
     final existing = _users.any((u) => u.username == username);
     if (existing) return false;
 
@@ -135,12 +188,10 @@ class MockDataService {
     return true;
   }
 
-  // Sign Out
   void signOut() {
     currentUser = null;
   }
 
-  // Add House
   House addHouse({
     required String title,
     required int rooms,
@@ -165,7 +216,6 @@ class MockDataService {
       payment: payment,
       ownerId: currentUser!.id,
       imageUrls: [
-        // In a real app, user picks images. We'll store placeholders for now.
         'https://via.placeholder.com/400?text=House${_houses.length + 1}A',
       ],
     );
@@ -173,7 +223,10 @@ class MockDataService {
     return newHouse;
   }
 
-  // Update House
+  void deleteHouse(String houseId) {
+    _houses.removeWhere((h) => h.id == houseId);
+  }
+
   void updateHouse(House house) {
     final index = _houses.indexWhere((h) => h.id == house.id);
     if (index >= 0) {
@@ -181,54 +234,71 @@ class MockDataService {
     }
   }
 
-  // Delete House
-  void deleteHouse(String houseId) {
-    _houses.removeWhere((h) => h.id == houseId);
-  }
-
-  // Filter houses for a cleaner (only those that are not accepted yet)
   List<House> getAvailableHouses() {
     return _houses.where((h) => h.acceptedBy == null && !h.isFinished).toList();
   }
 
-  // Accept House
+  List<House> getOngoingHouses(String userId, String role) {
+    if (role == 'customer') {
+      return _houses.where((h) => 
+        h.ownerId == userId && 
+        h.acceptedBy != null && 
+        !h.isFinished
+      ).toList();
+    } else {
+      return _houses.where((h) => 
+        h.acceptedBy == userId && 
+        !h.isFinished
+      ).toList();
+    }
+  }
+
+  List<House> getCompletedHouses(String userId, String role) {
+    if (role == 'customer') {
+      return _houses.where((h) => 
+        h.ownerId == userId && 
+        h.isFinished
+      ).toList();
+    } else {
+      return _houses.where((h) => 
+        h.acceptedBy == userId && 
+        h.isFinished
+      ).toList();
+    }
+  }
+
+  List<User> getAllCleaners() {
+    return _users.where((u) => u.role == 'cleaner').toList();
+  }
+
   void acceptHouse(String houseId, String cleanerId) {
     final house = _houses.firstWhere((h) => h.id == houseId);
     house.acceptedBy = cleanerId;
     updateHouse(house);
   }
 
-  // Send Chat Message
   void sendMessage(String houseId, String senderId, String text) {
     final house = _houses.firstWhere((h) => h.id == houseId);
     house.messages.add({'senderId': senderId, 'text': text});
     updateHouse(house);
   }
 
-  // Mark House as finished
   void finishHouse(String houseId) {
     final house = _houses.firstWhere((h) => h.id == houseId);
     house.isFinished = true;
     updateHouse(house);
   }
 
-  // Add review to user
   void addReviewToUser(String userId, String review, double rating) {
     final user = _users.firstWhere((u) => u.id == userId);
     user.reviews.add(review);
-    // Recalculate average rating
-    final totalReviews = user.reviews.length;
-    // Just a naive approach: average rating as sum of rating / count
-    // In a real scenario, you'd store numeric ratings separately
-    user.rating = ((user.rating * (totalReviews - 1)) + rating) / totalReviews;
+    final count = user.reviews.length;
+    user.rating = ((user.rating * (count - 1)) + rating) / count;
   }
 
-  // Add review to House
   void addReviewToHouse(String houseId, String review) {
-    // Could store a separate list if needed
-    // For simplicity, let's just add a message in the chat as "house review"
     final house = _houses.firstWhere((h) => h.id == houseId);
-    house.messages.add({'senderId': 'system', 'text': 'House Review: $review'});
+    house.messages.add({'senderId': 'system', 'text': 'Review: $review'});
     updateHouse(house);
   }
 }

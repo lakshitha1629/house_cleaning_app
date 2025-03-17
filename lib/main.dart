@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:house_cleaning_app/screens/welcome_screen.dart';
 import 'package:house_cleaning_app/screens/sign_in_screen.dart';
 import 'package:house_cleaning_app/screens/sign_up_screen.dart';
-import 'package:house_cleaning_app/screens/customer_home_screen.dart';
-import 'package:house_cleaning_app/screens/cleaner_home_screen.dart';
+import 'package:house_cleaning_app/screens/customer_dashboard_screen.dart';
+import 'package:house_cleaning_app/screens/cleaner_dashboard_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -30,8 +30,8 @@ class MyApp extends StatelessWidget {
         '/signUp': (context) => const SignUpScreen(),
 
         // Home pages
-        '/customerHome': (context) => const CustomerHomeScreen(),
-        '/cleanerHome': (context) => const CleanerHomeScreen(),
+        '/customerDashboard': (context) => const CustomerDashboardScreen(),
+        '/cleanerDashboard': (context) => const CleanerDashboardScreen(),
       },
     );
   }

@@ -13,11 +13,10 @@ class _AddHouseScreenState extends State<AddHouseScreen> {
   final _titleCtrl = TextEditingController();
   final _roomsCtrl = TextEditingController();
   final _bathroomsCtrl = TextEditingController();
-  final _flooringTypeCtrl = TextEditingController();
+  final _floorTypeCtrl = TextEditingController();
   final _addressCtrl = TextEditingController();
   final _locationCtrl = TextEditingController();
   final _paymentCtrl = TextEditingController();
-
   bool _kitchen = false;
   bool _garage = false;
 
@@ -31,7 +30,7 @@ class _AddHouseScreenState extends State<AddHouseScreen> {
         bathrooms: int.parse(_bathroomsCtrl.text.trim()),
         kitchen: _kitchen,
         garage: _garage,
-        flooringType: _flooringTypeCtrl.text.trim(),
+        flooringType: _floorTypeCtrl.text.trim(),
         address: _addressCtrl.text.trim(),
         location: _locationCtrl.text.trim(),
         payment: double.parse(_paymentCtrl.text.trim()),
@@ -55,25 +54,21 @@ class _AddHouseScreenState extends State<AddHouseScreen> {
               TextFormField(
                 controller: _titleCtrl,
                 decoration: const InputDecoration(labelText: 'House Title'),
-                validator: (val) =>
-                    val == null || val.isEmpty ? 'Enter house title' : null,
+                validator: (val) => val == null || val.isEmpty ? 'Enter house title' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _roomsCtrl,
                 decoration: const InputDecoration(labelText: 'Number of Rooms'),
                 keyboardType: TextInputType.number,
-                validator: (val) =>
-                    val == null || val.isEmpty ? 'Enter rooms count' : null,
+                validator: (val) => val == null || val.isEmpty ? 'Enter rooms count' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _bathroomsCtrl,
-                decoration:
-                    const InputDecoration(labelText: 'Number of Bathrooms'),
+                decoration: const InputDecoration(labelText: 'Number of Bathrooms'),
                 keyboardType: TextInputType.number,
-                validator: (val) =>
-                    val == null || val.isEmpty ? 'Enter bathrooms count' : null,
+                validator: (val) => val == null || val.isEmpty ? 'Enter bathrooms count' : null,
               ),
               const SizedBox(height: 16),
               SwitchListTile(
@@ -95,32 +90,28 @@ class _AddHouseScreenState extends State<AddHouseScreen> {
                 },
               ),
               TextFormField(
-                controller: _flooringTypeCtrl,
+                controller: _floorTypeCtrl,
                 decoration: const InputDecoration(labelText: 'Flooring Type'),
-                validator: (val) =>
-                    val == null || val.isEmpty ? 'Enter floor type' : null,
+                validator: (val) => val == null || val.isEmpty ? 'Enter floor type' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _addressCtrl,
                 decoration: const InputDecoration(labelText: 'Address'),
-                validator: (val) =>
-                    val == null || val.isEmpty ? 'Enter address' : null,
+                validator: (val) => val == null || val.isEmpty ? 'Enter address' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _locationCtrl,
                 decoration: const InputDecoration(labelText: 'Location (City)'),
-                validator: (val) =>
-                    val == null || val.isEmpty ? 'Enter location' : null,
+                validator: (val) => val == null || val.isEmpty ? 'Enter location' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _paymentCtrl,
                 decoration: const InputDecoration(labelText: 'Payment (Budget)'),
                 keyboardType: TextInputType.number,
-                validator: (val) =>
-                    val == null || val.isEmpty ? 'Enter payment' : null,
+                validator: (val) => val == null || val.isEmpty ? 'Enter payment' : null,
               ),
               const SizedBox(height: 32),
               ElevatedButton(

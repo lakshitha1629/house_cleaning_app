@@ -13,7 +13,6 @@ class ReviewScreen extends StatefulWidget {
 class _ReviewScreenState extends State<ReviewScreen> {
   final _feedbackCtrl = TextEditingController();
   double _rating = 0.0;
-
   final mockService = MockDataService();
 
   void _submitReview() {
@@ -28,27 +27,16 @@ class _ReviewScreenState extends State<ReviewScreen> {
     final currentUser = mockService.currentUser;
     if (currentUser == null) return;
 
-    // If current user is customer, review the cleaner
     if (currentUser.role == 'customer' && house.acceptedBy != null) {
-      // Add review to the cleaner
-      mockService.addReviewToUser(
-        house.acceptedBy!,
-        feedback,
-        _rating,
-      );
-      // Also store a note in the house
+      // review the cleaner
+      mockService.addReviewToUser(house.acceptedBy!, feedback, _rating);
       mockService.addReviewToHouse(
         house.id,
         'Customer Feedback: $feedback (Rating: $_rating)',
       );
     } else if (currentUser.role == 'cleaner') {
-      // Add review to the house owner
-      mockService.addReviewToUser(
-        house.ownerId,
-        'Cleaner Feedback: $feedback',
-        _rating,
-      );
-      // Also store a note in the house
+      // review the customer (house owner)
+      mockService.addReviewToUser(house.ownerId, feedback, _rating);
       mockService.addReviewToHouse(
         house.id,
         'Cleaner Feedback: $feedback (Rating: $_rating)',

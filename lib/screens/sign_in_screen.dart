@@ -26,9 +26,9 @@ class _SignInScreenState extends State<SignInScreen> {
         User? user = mockService.currentUser;
         if (user != null) {
           if (user.role == 'customer') {
-            Navigator.pushReplacementNamed(context, '/customerHome');
+            Navigator.pushReplacementNamed(context, '/customerDashboard');
           } else {
-            Navigator.pushReplacementNamed(context, '/cleanerHome');
+            Navigator.pushReplacementNamed(context, '/cleanerDashboard');
           }
         }
       } else {

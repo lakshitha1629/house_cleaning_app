@@ -34,9 +34,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
       if (success) {
         // If sign-up succeeded, we can directly go to the right home screen
         if (_selectedRole == 'customer') {
-          Navigator.pushReplacementNamed(context, '/customerHome');
+          Navigator.pushReplacementNamed(context, '/customerDashboard');
         } else {
-          Navigator.pushReplacementNamed(context, '/cleanerHome');
+          Navigator.pushReplacementNamed(context, '/cleanerDashboard');
         }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(

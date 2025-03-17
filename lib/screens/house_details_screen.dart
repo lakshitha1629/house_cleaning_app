@@ -32,7 +32,7 @@ class _HouseDetailsScreenState extends State<HouseDetailsScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Gallery of images
+            // Gallery
             SizedBox(
               height: 200,
               child: PageView(
@@ -46,7 +46,7 @@ class _HouseDetailsScreenState extends State<HouseDetailsScreen> {
             Text('Rooms: ${house.rooms}, Bathrooms: ${house.bathrooms}'),
             Text('Kitchen: ${house.kitchen ? 'Yes' : 'No'}'),
             Text('Garage: ${house.garage ? 'Yes' : 'No'}'),
-            Text('Flooring Type: ${house.flooringType}'),
+            Text('Flooring: ${house.flooringType}'),
             Text('Address: ${house.address}'),
             Text('Location: ${house.location}'),
             Text('Payment: \$${house.payment}'),
@@ -54,10 +54,10 @@ class _HouseDetailsScreenState extends State<HouseDetailsScreen> {
             Text('Status: '
                 '${house.acceptedBy == null ? 'Not Accepted' : house.isFinished ? 'Finished' : 'In Progress'}'),
             const SizedBox(height: 20),
+
             if (house.acceptedBy != null && !house.isFinished)
               ElevatedButton(
                 onPressed: () {
-                  // Go to Chat
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -67,21 +67,21 @@ class _HouseDetailsScreenState extends State<HouseDetailsScreen> {
                 },
                 child: const Text('Go to Chat'),
               ),
+
             if (house.acceptedBy != null &&
                 house.acceptedBy == mockService.currentUser?.id &&
                 !house.isFinished)
               ElevatedButton(
                 onPressed: () {
-                  // Mark as finished
                   mockService.finishHouse(house.id);
                   setState(() {});
                 },
                 child: const Text('Mark as Finished'),
               ),
+
             if (house.isFinished)
               ElevatedButton(
                 onPressed: () {
-                  // Add review
                   Navigator.push(
                     context,
                     MaterialPageRoute(
