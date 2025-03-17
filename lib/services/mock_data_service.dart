@@ -23,9 +23,9 @@ class MockDataService {
     _users.addAll([
       User(
         id: 'u1',
-        name: 'Alice Customer',
+        name: 'Test Customer',
         role: 'customer',
-        username: 'alice',
+        username: 'customer',
         password: '123',
         contactNumber: '123-456-7890',
         address: '123 Main St',
@@ -33,9 +33,9 @@ class MockDataService {
      ),
       User(
         id: 'u2',
-        name: 'Bob Cleaner',
+        name: 'Test Cleaner',
         role: 'cleaner',
-        username: 'bob',
+        username: 'cleaner',
         password: '123',
         contactNumber: '987-654-3210',
         address: '456 Side St',
@@ -58,7 +58,7 @@ class MockDataService {
         payment: 100.0,
         ownerId: 'u1',
         imageUrls: [
-          'https://www.lankaislandproperties.com/wp-content/uploads/2024/02/1-11-400x263.jpg',
+          'https://media.vrbo.com/lodging/75000000/74290000/74281700/74281637/2b53b1b4.jpg',
         ],
       ),
       House(
@@ -79,7 +79,7 @@ class MockDataService {
       ),
        House(
         id: 'h3',
-        title: '2-Bedroom House (Available)',
+        title: '2-Bedroom House',
         rooms: 2,
         bathrooms: 1,
         kitchen: true,
@@ -90,7 +90,7 @@ class MockDataService {
         payment: 80.0,
         ownerId: 'u1',
         imageUrls: [
-          'https://nexahomes.com.au/wp-content/uploads/2023/10/facade-min.png',
+          'https://media.vrbo.com/lodging/32000000/31860000/31859700/31859616/c705b487.jpg',
         ],
       ),
     ]);
