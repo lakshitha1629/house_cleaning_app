@@ -58,8 +58,7 @@ class MockDataService {
         payment: 100.0,
         ownerId: 'u1',
         imageUrls: [
-          'https://media-cdn.tripadvisor.com/media/photo-s/2c/b0/b6/2b/apartment-hotels.jpg',
-          'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSagfZcNvESS-xuuzqBMOn124U07WyjRrxzpQ&s',
+          'https://www.lankaislandproperties.com/wp-content/uploads/2024/02/1-11-400x263.jpg',
         ],
       ),
       House(
@@ -75,7 +74,6 @@ class MockDataService {
         payment: 60.0,
         ownerId: 'u1',
         imageUrls: [
-          'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSagfZcNvESS-xuuzqBMOn124U07WyjRrxzpQ&s',
           'https://media-cdn.tripadvisor.com/media/photo-s/2c/b0/b6/2b/apartment-hotels.jpg',
         ],
       ),
@@ -92,7 +90,7 @@ class MockDataService {
         payment: 80.0,
         ownerId: 'u1',
         imageUrls: [
-          'https://via.placeholder.com/400?text=House3A',
+          'https://nexahomes.com.au/wp-content/uploads/2023/10/facade-min.png',
         ],
       ),
     ]);

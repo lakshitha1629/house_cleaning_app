@@ -24,76 +24,195 @@ class _HouseDetailsScreenState extends State<HouseDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     final house = widget.house;
-
     return Scaffold(
       appBar: AppBar(
         title: Text(house.title),
+        elevation: 0,
+        backgroundColor: Colors.blueAccent,
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // Gallery
-            SizedBox(
-              height: 200,
+      body: ListView(
+        children: [
+          // Gallery Section with rounded corners
+          Container(
+            height: 250,
+            margin: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              color: Colors.grey[300],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
               child: PageView(
-                children: [
-                  for (var url in house.imageUrls)
-                    Image.network(url, fit: BoxFit.cover),
-                ],
+                children: house.imageUrls.map((url) {
+                  return Image.network(
+                    url,
+                    fit: BoxFit.cover,
+                  );
+                }).toList(),
               ),
             ),
-            const SizedBox(height: 16),
-            Text('Rooms: ${house.rooms}, Bathrooms: ${house.bathrooms}'),
-            Text('Kitchen: ${house.kitchen ? 'Yes' : 'No'}'),
-            Text('Garage: ${house.garage ? 'Yes' : 'No'}'),
-            Text('Flooring: ${house.flooringType}'),
-            Text('Address: ${house.address}'),
-            Text('Location: ${house.location}'),
-            Text('Payment: \$${house.payment}'),
-            const Divider(),
-            Text('Status: '
-                '${house.acceptedBy == null ? 'Not Accepted' : house.isFinished ? 'Finished' : 'In Progress'}'),
-            const SizedBox(height: 20),
-
-            if (house.acceptedBy != null && !house.isFinished)
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ChatScreen(house: house),
+          ),
+          // Details Section Card
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Title and Payment Row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          house.title,
+                          style: const TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          "\$${house.payment}",
+                          style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green),
+                        ),
+                      ],
                     ),
-                  ).then((_) => setState(() {}));
-                },
-                child: const Text('Go to Chat'),
-              ),
-
-            if (house.acceptedBy != null &&
-                house.acceptedBy == mockService.currentUser?.id &&
-                !house.isFinished)
-              ElevatedButton(
-                onPressed: () {
-                  mockService.finishHouse(house.id);
-                  setState(() {});
-                },
-                child: const Text('Mark as Finished'),
-              ),
-
-            if (house.isFinished)
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ReviewScreen(house: house),
+                    const SizedBox(height: 8),
+                    // Location and Address
+                    Row(
+                      children: [
+                        const Icon(Icons.location_on, size: 16, color: Colors.grey),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            house.location,
+                            style: const TextStyle(fontSize: 16, color: Colors.grey),
+                          ),
+                        ),
+                      ],
                     ),
-                  ).then((_) => setState(() {}));
-                },
-                child: const Text('Leave a Review'),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        const Icon(Icons.home, size: 16, color: Colors.grey),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            house.address,
+                            style: const TextStyle(fontSize: 16, color: Colors.grey),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Divider(height: 24, thickness: 1),
+                    // Features Row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildFeatureItem(Icons.king_bed, "${house.rooms} Rooms"),
+                        _buildFeatureItem(Icons.bathtub, "${house.bathrooms} Baths"),
+                        _buildFeatureItem(
+                            Icons.kitchen, house.kitchen ? "Kitchen" : "No Kitchen"),
+                        _buildFeatureItem(
+                            Icons.directions_car, house.garage ? "Garage" : "No Garage"),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    // Status
+                    Text(
+                      "Status: ${house.acceptedBy == null ? 'Not Accepted' : house.isFinished ? 'Finished' : 'In Progress'}",
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
               ),
-          ],
-        ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          // Action Buttons Section
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                if (house.acceptedBy != null && !house.isFinished)
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blueAccent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ChatScreen(house: house),
+                        ),
+                      ).then((_) => setState(() {}));
+                    },
+                    icon: const Icon(Icons.chat),
+                    label: const Text("Chat"),
+                  ),
+                if (house.acceptedBy != null &&
+                    house.acceptedBy == mockService.currentUser?.id &&
+                    !house.isFinished)
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orangeAccent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: () {
+                      mockService.finishHouse(house.id);
+                      setState(() {});
+                    },
+                    icon: const Icon(Icons.check_circle),
+                    label: const Text("Finish Job"),
+                  ),
+                if (house.isFinished)
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ReviewScreen(house: house),
+                        ),
+                      ).then((_) => setState(() {}));
+                    },
+                    icon: const Icon(Icons.rate_review),
+                    label: const Text("Review"),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+        ],
       ),
+    );
+  }
+
+  Widget _buildFeatureItem(IconData icon, String label) {
+    return Column(
+      children: [
+        Icon(icon, size: 24, color: Colors.blueAccent),
+        const SizedBox(height: 4),
+        Text(label, style: const TextStyle(fontSize: 14)),
+      ],
     );
   }
 }
