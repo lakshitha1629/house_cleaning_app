@@ -1,7 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:house_cleaning_app/screens/Customer_home.dart';
 import 'package:house_cleaning_app/screens/welcome_screen.dart';
 import 'package:house_cleaning_app/screens/sign_in_screen.dart';
 import 'package:house_cleaning_app/screens/sign_up_screen.dart';
@@ -62,9 +61,6 @@ class MyApp extends StatelessWidget {
         // Home pages
         '/customerDashboard': (context) => const CustomerDashboardScreen(),
         '/cleanerDashboard': (context) => const CleanerDashboardScreen(),
-
-
-        '/CustomerHome': (context) => const CustomerHome(),
       },
     );
   }

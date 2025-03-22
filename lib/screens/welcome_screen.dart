@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:house_cleaning_app/services/mock_data_service.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({Key? key}) : super(key: key);
@@ -12,8 +11,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Initialize mock data once at the start
-    MockDataService().initializeMockData();
   }
 
   @override

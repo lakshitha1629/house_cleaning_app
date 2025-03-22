@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:house_cleaning_app/models/house.dart';
 import 'package:house_cleaning_app/screens/house_details_screen.dart';
+import 'package:house_cleaning_app/services/firebaseService.dart';
+import 'package:house_cleaning_app/screens/chat_screen.dart';
 
 class CleanerDashboardScreen extends StatefulWidget {
   const CleanerDashboardScreen({Key? key}) : super(key: key);
@@ -11,28 +13,79 @@ class CleanerDashboardScreen extends StatefulWidget {
 
 class _CleanerDashboardScreenState extends State<CleanerDashboardScreen> {
   int _selectedIndex = 0;
+
+  // For filtering
   String filterLocation = '';
   int? filterRooms;
-  
-  // Sample data
+
+  // Real data from Firestore
   List<House> availableHouses = [];
   List<House> ongoingHouses = [];
-  List<Map<String, String>> notifications = [];
+
+  // For notifications
+  List<Map<String, dynamic>> notifications = [];
+
+  // For the Chat tab, houses where this cleaner is the acceptedBy
   List<House> myHouses = [];
-  
+
+  final firebaseService = FirebaseService();
+
+  bool _isLoading = false;
+
   @override
   void initState() {
     super.initState();
-    // Initialize with sample data
-    _loadSampleData();
+    _fetchData();
   }
-  
-  void _loadSampleData() {
-    // This would be replaced with actual data loading in a real app
-    availableHouses = [];
-    ongoingHouses = [];
-    notifications = [];
-    myHouses = [];
+
+  Future<void> _fetchData() async {
+    setState(() => _isLoading = true);
+
+    // Make sure someone is signed in
+    final user = firebaseService.currentUser;
+    if (user == null) {
+      // Show a message or redirect user
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No user is signed in.')),
+      );
+      setState(() => _isLoading = false);
+      return;
+    }
+    if (user.role != 'cleaner') {
+      // Show a message or do something else if user is not a cleaner
+      setState(() => _isLoading = false);
+      return;
+    }
+
+    try {
+      // 1. Load available houses
+      final loadedAvailable = await firebaseService.getAvailableHouses();
+      // 2. Load ongoing houses for this user
+      final loadedOngoing =
+          await firebaseService.getOngoingHouses(user.id, user.role);
+      // 3. For chat tab, let's define "myHouses" as houses where acceptedBy == user.id
+      final allHouses = await firebaseService.getAllHouses();
+      final chatHouses =
+          allHouses.where((h) => h.acceptedBy == user.id).toList();
+
+      // 4. Notifications
+      final loadedNotifs =
+          await firebaseService.getNotificationsForUser(user.id);
+
+      setState(() {
+        availableHouses = loadedAvailable;
+        ongoingHouses = loadedOngoing;
+        myHouses = chatHouses;
+        notifications = loadedNotifs;
+      });
+    } catch (e) {
+      print('Error fetching data: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to load data.')),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -46,7 +99,9 @@ class _CleanerDashboardScreenState extends State<CleanerDashboardScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F3F7),
-      body: pages[_selectedIndex],
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Colors.white,
         selectedItemColor: Colors.blueAccent,
@@ -55,7 +110,8 @@ class _CleanerDashboardScreenState extends State<CleanerDashboardScreen> {
         onTap: (index) => setState(() => _selectedIndex = index),
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.notifications), label: 'Notifications'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.notifications), label: 'Notifications'),
           BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Chat'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
@@ -73,99 +129,104 @@ class _CleanerDashboardScreenState extends State<CleanerDashboardScreen> {
           .toList();
     }
     if (filterRooms != null) {
-      filteredHouses = filteredHouses.where((h) => h.rooms == filterRooms).toList();
+      filteredHouses =
+          filteredHouses.where((h) => h.rooms == filterRooms).toList();
     }
 
     return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            // Filter row
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    decoration: const InputDecoration(
-                      labelText: 'Filter by location',
-                      border: OutlineInputBorder(),
+      child: RefreshIndicator(
+        onRefresh: _fetchData,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              // Filter row
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      decoration: const InputDecoration(
+                        labelText: 'Filter by location',
+                        border: OutlineInputBorder(),
+                      ),
+                      onChanged: (val) {
+                        setState(() {
+                          filterLocation = val.trim().toLowerCase();
+                        });
+                      },
                     ),
-                    onChanged: (val) {
-                      setState(() {
-                        filterLocation = val.trim().toLowerCase();
-                      });
-                    },
                   ),
+                  const SizedBox(width: 8),
+                  SizedBox(
+                    width: 80,
+                    child: TextField(
+                      decoration: const InputDecoration(
+                        labelText: 'Rooms?',
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                      onChanged: (val) {
+                        setState(() {
+                          if (val.isEmpty) {
+                            filterRooms = null;
+                          } else {
+                            filterRooms = int.tryParse(val);
+                          }
+                        });
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "Available Houses",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(width: 8),
+              ),
+              const SizedBox(height: 8),
+              if (filteredHouses.isEmpty)
+                const Text("No available houses at the moment.")
+              else
                 SizedBox(
-                  width: 80,
-                  child: TextField(
-                    decoration: const InputDecoration(
-                      labelText: 'Rooms?',
-                      border: OutlineInputBorder(),
-                    ),
-                    keyboardType: TextInputType.number,
-                    onChanged: (val) {
-                      setState(() {
-                        if (val.isEmpty) {
-                          filterRooms = null;
-                        } else {
-                          filterRooms = int.tryParse(val);
-                        }
-                      });
+                  height: 220,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: filteredHouses.length,
+                    itemBuilder: (context, index) {
+                      final house = filteredHouses[index];
+                      return _buildAvailableCard(house);
                     },
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                "Available Houses",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ),
-            const SizedBox(height: 8),
-            if (filteredHouses.isEmpty)
-              const Text("No available houses at the moment.")
-            else
-              SizedBox(
-                height: 200,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: filteredHouses.length,
-                  itemBuilder: (context, index) {
-                    final house = filteredHouses[index];
-                    return _buildAvailableCard(house);
-                  },
+              const SizedBox(height: 16),
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "Ongoing Jobs",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
-            const SizedBox(height: 16),
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                "Ongoing Jobs",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ),
-            const SizedBox(height: 8),
-            if (ongoingHouses.isEmpty)
-              const Text("No ongoing jobs yet.")
-            else
-              SizedBox(
-                height: 200,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: ongoingHouses.length,
-                  itemBuilder: (context, index) {
-                    final house = ongoingHouses[index];
-                    return _buildOngoingCard(house);
-                  },
+              const SizedBox(height: 8),
+              if (ongoingHouses.isEmpty)
+                const Text("No ongoing jobs yet.")
+              else
+                SizedBox(
+                  height: 220,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: ongoingHouses.length,
+                    itemBuilder: (context, index) {
+                      final house = ongoingHouses[index];
+                      return _buildOngoingCard(house);
+                    },
+                  ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -186,7 +247,8 @@ class _CleanerDashboardScreenState extends State<CleanerDashboardScreen> {
           // House image
           Expanded(
             child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(12)),
               child: Image.network(
                 house.imageUrls.isNotEmpty
                     ? house.imageUrls.first
@@ -198,25 +260,22 @@ class _CleanerDashboardScreenState extends State<CleanerDashboardScreen> {
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: Text(house.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+            child: Text(house.title,
+                style: const TextStyle(fontWeight: FontWeight.bold)),
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               ElevatedButton(
-                onPressed: () {
-                  // Accept house logic
-                  setState(() {
-                    ongoingHouses.add(house);
-                    availableHouses.remove(house);
-                  });
+                onPressed: () async {
+                  await _acceptHouse(house);
                 },
                 child: const Text("Accept"),
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.grey),
                 onPressed: () {
-                  // Hide house
+                  // Hide house locally (not recommended in real app)
                   setState(() {
                     availableHouses.remove(house);
                   });
@@ -235,7 +294,9 @@ class _CleanerDashboardScreenState extends State<CleanerDashboardScreen> {
       onTap: () async {
         await Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => HouseDetailsScreen(house: house, isCustomerView: false)),
+          MaterialPageRoute(
+            builder: (_) => ChatScreen(house: house), // direct to ChatScreen
+          ),
         );
         setState(() {});
       },
@@ -253,7 +314,8 @@ class _CleanerDashboardScreenState extends State<CleanerDashboardScreen> {
             // House image
             Expanded(
               child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(12)),
                 child: Image.network(
                   house.imageUrls.isNotEmpty
                       ? house.imageUrls.first
@@ -265,7 +327,8 @@ class _CleanerDashboardScreenState extends State<CleanerDashboardScreen> {
             ),
             Padding(
               padding: const EdgeInsets.all(8.0),
-              child: Text(house.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+              child: Text(house.title,
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
             ),
           ],
         ),
@@ -273,14 +336,40 @@ class _CleanerDashboardScreenState extends State<CleanerDashboardScreen> {
     );
   }
 
+  // Accept a house job in Firestore
+  Future<void> _acceptHouse(House house) async {
+    final user = firebaseService.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No user signed in.')),
+      );
+      return;
+    }
+    try {
+      await firebaseService.acceptHouse(house.id, user.id);
+
+      // After acceptance, reload data
+      await _fetchData();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Accepted house: ${house.title}')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error accepting house: $e')),
+      );
+    }
+  }
+
   // 2) NOTIFICATIONS TAB
   Widget _buildNotificationsTab() {
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+      child: RefreshIndicator(
+        onRefresh: _fetchData,
         child: notifications.isEmpty
             ? const Center(child: Text("No notifications yet."))
             : ListView.builder(
+                physics: const AlwaysScrollableScrollPhysics(),
                 itemCount: notifications.length,
                 itemBuilder: (context, index) {
                   final n = notifications[index];
@@ -298,40 +387,55 @@ class _CleanerDashboardScreenState extends State<CleanerDashboardScreen> {
 
   // 3) CHAT TAB
   Widget _buildChatTab() {
-    if (myHouses.isEmpty) {
-      return const SafeArea(
-        child: Center(child: Text("No chat available yet.")),
-      );
-    }
-
     return SafeArea(
-      child: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: myHouses.length,
-        itemBuilder: (context, index) {
-          final house = myHouses[index];
-          return Card(
-            child: ListTile(
-              title: Text(house.title),
-              subtitle: Text(
-                  house.isFinished ? "Finished" : (house.acceptedBy == null ? "Not Accepted" : "Ongoing")),
-              onTap: () async {
-                // Go to House Details
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => HouseDetailsScreen(house: house, isCustomerView: false)),
-                );
-                setState(() {});
-              },
-            ),
-          );
-        },
+      child: RefreshIndicator(
+        onRefresh: _fetchData,
+        child: myHouses.isEmpty
+            ? const Center(child: Text("No chat available yet."))
+            : ListView.builder(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(16),
+                itemCount: myHouses.length,
+                itemBuilder: (context, index) {
+                  final house = myHouses[index];
+                  final status = house.isFinished
+                      ? "Finished"
+                      : (house.acceptedBy == null ? "Not Accepted" : "Ongoing");
+                  return Card(
+                    child: ListTile(
+                      title: Text(house.title),
+                      subtitle: Text(status),
+                      onTap: () async {
+                        // Go to House Details
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => HouseDetailsScreen(
+                                house: house, isCustomerView: false),
+                          ),
+                        );
+                        setState(() {});
+                      },
+                    ),
+                  );
+                },
+              ),
       ),
     );
   }
 
-  // 4) PROFILE TAB
+  // -------------------- PROFILE TAB --------------------
   Widget _buildProfileTab() {
+    final user = firebaseService.currentUser;
+    if (user == null) {
+      return const Center(child: Text("No user signed in."));
+    }
+    final name = user.name.isEmpty ? 'No Name' : user.name;
+    final contact = user.contactNumber.isEmpty ? 'No Contact' : user.contactNumber;
+    final address = user.address.isEmpty ? 'No Address' : user.address;
+    final ratingValue = user.rating;
+    final pictureUrl = user.pictureUrl.isNotEmpty ? user.pictureUrl : 'https://via.placeholder.com/100';
+
     return SafeArea(
       child: Container(
         width: double.infinity,
@@ -339,33 +443,33 @@ class _CleanerDashboardScreenState extends State<CleanerDashboardScreen> {
         child: Column(
           children: [
             const SizedBox(height: 16),
-            const CircleAvatar(
+            CircleAvatar(
               radius: 50,
-              backgroundImage: NetworkImage("https://via.placeholder.com/100"),
+              backgroundImage: NetworkImage(pictureUrl),
             ),
             const SizedBox(height: 16),
-            const Text(
-              "John Doe",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            Text(
+              name,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            const Text("Contact: +1234567890"),
-            const Text("Address: 123 Main St"),
+            Text("Contact: $contact"),
+            Text("Address: $address"),
             const SizedBox(height: 8),
-            const Text("Rating: 4.5"),
+            Text("Rating: ${ratingValue.toStringAsFixed(1)}"),
             const SizedBox(height: 16),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.black54,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
-              onPressed: () {
-                Navigator.pushNamedAndRemoveUntil(context, '/welcome', (route) => false);
+              onPressed: () async {
+                await firebaseService.signOut();
+                if (mounted) {
+                  Navigator.pushNamedAndRemoveUntil(context, '/welcome', (route) => false);
+                }
               },
-              child: const Text(
-                "Log Out",
-                style: TextStyle(color: Colors.white),
-              )
+              child: const Text("Log Out", style: TextStyle(color: Colors.white)),
             ),
           ],
         ),

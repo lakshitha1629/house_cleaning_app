@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:house_cleaning_app/models/house.dart';
-import 'package:house_cleaning_app/services/mock_data_service.dart';
 import 'package:house_cleaning_app/screens/chat_screen.dart';
 import 'package:house_cleaning_app/screens/review_screen.dart';
+import 'package:house_cleaning_app/services/firebaseService.dart';
 
 class HouseDetailsScreen extends StatefulWidget {
   final House house;
@@ -19,11 +19,13 @@ class HouseDetailsScreen extends StatefulWidget {
 }
 
 class _HouseDetailsScreenState extends State<HouseDetailsScreen> {
-  final mockService = MockDataService();
+  final firebaseService = FirebaseService();
 
   @override
   Widget build(BuildContext context) {
     final house = widget.house;
+    final currentUser = firebaseService.currentUser; // The logged-in user
+
     return Scaffold(
       appBar: AppBar(
         title: Text(house.title),
@@ -32,7 +34,7 @@ class _HouseDetailsScreenState extends State<HouseDetailsScreen> {
       ),
       body: ListView(
         children: [
-          // Gallery Section with rounded corners
+          // 1) Image Gallery
           Container(
             height: 250,
             margin: const EdgeInsets.all(16),
@@ -52,7 +54,8 @@ class _HouseDetailsScreenState extends State<HouseDetailsScreen> {
               ),
             ),
           ),
-          // Details Section Card
+
+          // 2) Details Card
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Card(
@@ -65,26 +68,30 @@ class _HouseDetailsScreenState extends State<HouseDetailsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Title and Payment Row
+                    // Title & Payment
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
                           house.title,
                           style: const TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold),
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         Text(
                           "\$${house.payment}",
                           style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.green),
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green,
+                          ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 8),
-                    // Location and Address
+
+                    // Location & Address
                     Row(
                       children: [
                         const Icon(Icons.location_on, size: 16, color: Colors.grey),
@@ -110,38 +117,42 @@ class _HouseDetailsScreenState extends State<HouseDetailsScreen> {
                         ),
                       ],
                     ),
+
                     const Divider(height: 24, thickness: 1),
-                    // Features Row
+
+                    // Features
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         _buildFeatureItem(Icons.king_bed, "${house.rooms} Rooms"),
                         _buildFeatureItem(Icons.bathtub, "${house.bathrooms} Baths"),
-                        _buildFeatureItem(
-                            Icons.kitchen, house.kitchen ? "Kitchen" : "No Kitchen"),
-                        _buildFeatureItem(
-                            Icons.directions_car, house.garage ? "Garage" : "No Garage"),
+                        _buildFeatureItem(Icons.kitchen, house.kitchen ? "Kitchen" : "No Kitchen"),
+                        _buildFeatureItem(Icons.directions_car, house.garage ? "Garage" : "No Garage"),
                       ],
                     ),
                     const SizedBox(height: 16),
+
                     // Status
                     Text(
-                      "Status: ${house.acceptedBy == null ? 'Not Accepted' : house.isFinished ? 'Finished' : 'In Progress'}",
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold),
+                      "Status: "
+                      "${house.acceptedBy == null ? 'Not Accepted' : house.isFinished ? 'Finished' : 'In Progress'}",
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
               ),
             ),
           ),
+
           const SizedBox(height: 16),
-          // Action Buttons Section
+
+          // 3) Action Buttons (Chat, Finish Job, Review)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
+                // SHOW CHAT if house is accepted (and not finished)
                 if (house.acceptedBy != null && !house.isFinished)
                   ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
@@ -151,6 +162,7 @@ class _HouseDetailsScreenState extends State<HouseDetailsScreen> {
                       ),
                     ),
                     onPressed: () {
+                      // Go to Chat Screen
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -161,9 +173,11 @@ class _HouseDetailsScreenState extends State<HouseDetailsScreen> {
                     icon: const Icon(Icons.chat),
                     label: const Text("Chat"),
                   ),
-                if (house.acceptedBy != null &&
-                    house.acceptedBy == mockService.currentUser?.id &&
-                    !house.isFinished)
+
+                // SHOW FINISH JOB if the current user is the accepted cleaner & not finished
+                if (house.acceptedBy != null
+                    && house.acceptedBy == currentUser?.id
+                    && !house.isFinished)
                   ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.orangeAccent,
@@ -171,13 +185,12 @@ class _HouseDetailsScreenState extends State<HouseDetailsScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    onPressed: () {
-                      mockService.finishHouse(house.id);
-                      setState(() {});
-                    },
+                    onPressed: _finishJob,
                     icon: const Icon(Icons.check_circle),
                     label: const Text("Finish Job"),
                   ),
+
+                // SHOW REVIEW if house is finished
                 if (house.isFinished)
                   ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
@@ -200,10 +213,29 @@ class _HouseDetailsScreenState extends State<HouseDetailsScreen> {
               ],
             ),
           ),
+
           const SizedBox(height: 24),
         ],
       ),
     );
+  }
+
+  // Called when user taps "Finish Job"
+  Future<void> _finishJob() async {
+    try {
+      await FirebaseService().finishHouse(widget.house.id);
+      setState(() {
+        widget.house.isFinished = true; // Locally update
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Marked "${widget.house.title}" as finished.')),
+      );
+    } catch (e) {
+      print('Error finishing house: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to finish job.')),
+      );
+    }
   }
 
   Widget _buildFeatureItem(IconData icon, String label) {

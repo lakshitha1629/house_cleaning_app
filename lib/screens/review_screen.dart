@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:house_cleaning_app/models/house.dart';
-import 'package:house_cleaning_app/services/mock_data_service.dart';
+import 'package:house_cleaning_app/services/firebaseService.dart';
 
 class ReviewScreen extends StatefulWidget {
   final House house;
@@ -13,9 +13,9 @@ class ReviewScreen extends StatefulWidget {
 class _ReviewScreenState extends State<ReviewScreen> {
   final _feedbackCtrl = TextEditingController();
   double _rating = 0.0;
-  final mockService = MockDataService();
+  final firebaseService = FirebaseService();
 
-  void _submitReview() {
+  Future<void> _submitReview() async {
     final feedback = _feedbackCtrl.text.trim();
     if (feedback.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -24,26 +24,40 @@ class _ReviewScreenState extends State<ReviewScreen> {
       return;
     }
     final house = widget.house;
-    final currentUser = mockService.currentUser;
-    if (currentUser == null) return;
-
-    if (currentUser.role == 'customer' && house.acceptedBy != null) {
-      // review the cleaner
-      mockService.addReviewToUser(house.acceptedBy!, feedback, _rating);
-      mockService.addReviewToHouse(
-        house.id,
-        'Customer Feedback: $feedback (Rating: $_rating)',
+    final currentUser = firebaseService.currentUser;
+    if (currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No user signed in.')),
       );
-    } else if (currentUser.role == 'cleaner') {
-      // review the customer (house owner)
-      mockService.addReviewToUser(house.ownerId, feedback, _rating);
-      mockService.addReviewToHouse(
-        house.id,
-        'Cleaner Feedback: $feedback (Rating: $_rating)',
-      );
+      return;
     }
 
-    Navigator.pop(context);
+    try {
+      if (currentUser.role == 'customer' && house.acceptedBy != null) {
+        // If customer, review the cleaner.
+        await firebaseService.addReviewToUser(house.acceptedBy!, 'Customer Feedback: $feedback (Rating: $_rating)', _rating);
+        await firebaseService.addReviewToHouse(house.id, 'Customer Feedback: $feedback (Rating: $_rating)');
+      } else if (currentUser.role == 'cleaner') {
+        // If cleaner, review the customer (house owner)
+        await firebaseService.addReviewToUser(house.ownerId, 'Cleaner Feedback: $feedback (Rating: $_rating)', _rating);
+        await firebaseService.addReviewToHouse(house.id, 'Cleaner Feedback: $feedback (Rating: $_rating)');
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Review submitted successfully!')),
+      );
+      Navigator.pop(context);
+    } catch (e) {
+      print('Error submitting review: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error submitting review: $e')),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _feedbackCtrl.dispose();
+    super.dispose();
   }
 
   @override
@@ -51,6 +65,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Leave a Review'),
+        backgroundColor: Colors.blueAccent,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -93,7 +108,14 @@ class _ReviewScreenState extends State<ReviewScreen> {
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: _submitReview,
-              child: const Text('Submit Review'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blueAccent,
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
+              ),
+              child: const Text(
+                'Submit Review',
+                style: TextStyle(fontSize: 18, color: Colors.white),
+              ),
             ),
           ],
         ),
