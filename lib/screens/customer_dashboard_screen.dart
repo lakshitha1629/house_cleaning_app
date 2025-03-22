@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:house_cleaning_app/services/mock_data_service.dart';
 import 'package:house_cleaning_app/models/house.dart';
 import 'package:house_cleaning_app/screens/add_house_screen.dart';
 import 'package:house_cleaning_app/screens/house_details_screen.dart';
-import 'package:house_cleaning_app/screens/chat_screen.dart';
 
 class CustomerDashboardScreen extends StatefulWidget {
   const CustomerDashboardScreen({Key? key}) : super(key: key);
@@ -14,17 +12,43 @@ class CustomerDashboardScreen extends StatefulWidget {
 
 class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
   int _selectedIndex = 0;
-  final mockService = MockDataService();
+  
+  // Sample direct data
+  final List<House> ongoingHouses = [];
+  final List<House> completedHouses = [];
+  final List<Map<String, String>> notifications = [];
+  final List<House> myHouses = [];
+  
+  // Sample user data
+  final Map<String, dynamic> userData = {
+    'name': 'John Doe',
+    'contactNumber': '123-456-7890',
+    'address': '123 Main St, City',
+    'pictureUrl': 'https://via.placeholder.com/150',
+    'rating': 4.5,
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    // Here you would normally fetch data from a real service
+    _loadData();
+  }
+
+  void _loadData() {
+    // This would be replaced with actual API calls
+    setState(() {
+      // Example data
+      // Add some sample houses
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    final user = mockService.currentUser!;
-    final role = user.role; // "customer"
-
     final List<Widget> pages = [
-      _buildHomeTab(user.id, role),
-      _buildNotificationsTab(user.id),
-      _buildChatTab(user.id),
+      _buildHomeTab(),
+      _buildNotificationsTab(),
+      _buildChatTab(),
       _buildProfileTab(),
     ];
 
@@ -39,7 +63,7 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
         onTap: (index) => setState(() => _selectedIndex = index),
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.notifications), label: 'Notifications'),
+          BottomNavigationBarItem(icon: Icon(Icons.add_circle_rounded), label: 'Add Post'),
           BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Chat'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
@@ -48,73 +72,245 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
   }
 
   // 1) HOME TAB
-  Widget _buildHomeTab(String userId, String role) {
-    final ongoingHouses = mockService.getOngoingHouses(userId, role);
-    final completedHouses = mockService.getCompletedHouses(userId, role);
-
+  Widget _buildHomeTab() {
     return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "Ongoing Cleaners",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            // Horizontal list of ongoing houses
-            if (ongoingHouses.isEmpty)
-              const Text("No ongoing cleaners yet.")
-            else
-              SizedBox(
-                height: 200,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: ongoingHouses.length,
-                  itemBuilder: (context, index) {
-                    final house = ongoingHouses[index];
-                    return _buildHouseCard(house, isOngoing: true);
-                  },
-                ),
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text(
+            'Dashboard',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          backgroundColor: const Color(0xFF3A30A8),
+          flexibleSpace: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF5359BF), Color(0xFF3A30A8)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-            const SizedBox(height: 16),
-            const Text(
-              "Completed Reviews",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 8),
-            // Horizontal list of completed houses
-            if (completedHouses.isEmpty)
-              const Text("No completed jobs yet.")
-            else
-              SizedBox(
-                height: 200,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: completedHouses.length,
-                  itemBuilder: (context, index) {
-                    final house = completedHouses[index];
-                    return _buildHouseCard(house, isOngoing: false);
-                  },
-                ),
-              ),
-            const SizedBox(height: 16),
-            // Add House button
-            ElevatedButton.icon(
-              onPressed: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const AddHouseScreen()),
-                );
-                setState(() {});
+          ),
+          elevation: 0,
+          leading: Container(
+            margin: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.menu, color: Colors.white),
+              onPressed: () {
+                // Menu action
               },
-              icon: const Icon(Icons.add),
-              label: const Text("Add House"),
+            ),
+          ),
+          actions: [
+            Container(
+              margin: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.notifications, color: Colors.white),
+                onPressed: () {
+                  // Notification action
+                },
+              ),
             ),
           ],
         ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Image(image: AssetImage("assets/living.jpg"),
+              width: double.infinity,
+              height: 500,
+              fit: BoxFit.cover,
+              ),
+              SizedBox(
+                height: 20,
+              ),
+              // Welcome section with gradient container
+              Container(
+                margin: const EdgeInsets.only(bottom: 20),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF5359BF), Color(0xFF3A30A8)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 8,
+                      offset: const Offset(1, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Welcome, ${userData['name']}!",
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      "Find the best cleaning services for your home. Schedule your next cleaning session today!",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Cleaning Categories Section
+              const SizedBox(height: 24),
+              const Text(
+                "Cleaning Categories",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              
+              // Categories Row 1
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                _buildCategoryButton(
+                  icon: Icons.house_outlined,
+                  label: "Regular",
+                  color: Color(0xFF5359BF),
+                ),
+                _buildCategoryButton(
+                  icon: Icons.cleaning_services_outlined, 
+                  label: "Deep Clean",
+                  color: Color(0xFF3A30A8),
+                ),
+                _buildCategoryButton(
+                  icon: Icons.weekend_outlined,
+                  label: "Furniture",
+                  color: Color(0xFF5359BF),
+                ),
+                ],
+              ),
+              
+              // Categories Row 2
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                _buildCategoryButton(
+                  icon: Icons.window_outlined,
+                  label: "Windows",
+                  color: Color(0xFF3A30A8),
+                ),
+                _buildCategoryButton(
+                  icon: Icons.kitchen_outlined,
+                  label: "Kitchen",
+                  color: Color(0xFF5359BF),
+                ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                "Ongoing Cleaners",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              // Horizontal list of ongoing houses
+              if (ongoingHouses.isEmpty)
+                const Text("No ongoing cleaners yet.")
+              else
+                SizedBox(
+                  height: 200,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: ongoingHouses.length,
+                    itemBuilder: (context, index) {
+                      final house = ongoingHouses[index];
+                      return _buildHouseCard(house, isOngoing: true);
+                    },
+                  ),
+                ),
+              const SizedBox(height: 16),
+              const Text(
+                "Completed Reviews",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              // Horizontal list of completed houses
+              if (completedHouses.isEmpty)
+                const Text("No completed jobs yet.")
+              else
+                SizedBox(
+                  height: 200,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: completedHouses.length,
+                    itemBuilder: (context, index) {
+                      final house = completedHouses[index];
+                      return _buildHouseCard(house, isOngoing: false);
+                    },
+                  ),
+                ),
+              const SizedBox(height: 16),
+              // Add House button
+              ElevatedButton.icon(
+                onPressed: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AddHouseScreen()),
+                  );
+                  setState(() {
+                    _loadData(); // Refresh data after returning
+                  });
+                },
+                icon: const Icon(Icons.add),
+                label: const Text("Add House"),
+              ),
+            ],
+          ),
+        ),
       ),
+    );
+  }
+
+  Widget _buildCategoryButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+  }) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(
+            icon,
+            color: color,
+            size: 28,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 12),
+        ),
+      ],
     );
   }
 
@@ -125,7 +321,9 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
           context,
           MaterialPageRoute(builder: (_) => HouseDetailsScreen(house: house, isCustomerView: true)),
         );
-        setState(() {});
+        setState(() {
+          _loadData(); // Refresh data after returning
+        });
       },
       child: Container(
         width: 180,
@@ -165,37 +363,176 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
   }
 
   // 2) NOTIFICATIONS TAB
-  Widget _buildNotificationsTab(String userId) {
-    final notifs = mockService.getNotificationsForUser(userId);
-
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: notifs.isEmpty
-            ? const Center(child: Text("No notifications yet."))
-            : ListView.builder(
-                itemCount: notifs.length,
-                itemBuilder: (context, index) {
-                  final n = notifs[index];
-                  return Card(
-                    child: ListTile(
-                      title: Text(n['title'] ?? ''),
-                      subtitle: Text(n['message'] ?? ''),
-                    ),
-                  );
-                },
+  Widget _buildNotificationsTab() {
+    return Scaffold(
+      body: Column(
+        children: [
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Form(
+                key: GlobalKey<FormState>(),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "Add New Cleaning Request",
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF3A30A8),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      
+                      // Post Title
+                      TextFormField(
+                        decoration: const InputDecoration(
+                          labelText: "Post Title",
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.title),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter a title';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      // Location
+                      TextFormField(
+                        decoration: const InputDecoration(
+                          labelText: "Location",
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.location_on),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your location';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      // Number of Rooms
+                      TextFormField(
+                        decoration: const InputDecoration(
+                          labelText: "Number of Rooms",
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.bedroom_parent),
+                        ),
+                        keyboardType: TextInputType.number,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter number of rooms';
+                          }
+                          if (int.tryParse(value) == null) {
+                            return 'Please enter a valid number';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      // Number of Bathrooms
+                      TextFormField(
+                        decoration: const InputDecoration(
+                          labelText: "Number of Bathrooms",
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.bathroom),
+                        ),
+                        keyboardType: TextInputType.number,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter number of bathrooms';
+                          }
+                          if (int.tryParse(value) == null) {
+                            return 'Please enter a valid number';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      // Floor Type
+                      TextFormField(
+                        decoration: const InputDecoration(
+                          labelText: "Floor Type",
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.layers),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter floor type';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      // Contact Number
+                      TextFormField(
+                        decoration: const InputDecoration(
+                          labelText: "Contact Number",
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.phone),
+                        ),
+                        keyboardType: TextInputType.phone,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter contact number';
+                          }
+                          if (!RegExp(r'^\d{10}$').hasMatch(value)) {
+                            return 'Please enter a valid 10-digit phone number';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 24),
+                      
+                      // Submit Button
+                      Center(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF3A30A8),
+                            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                          ),
+                          onPressed: () {
+                            // Validate form
+                            final formState = Form.of(context)?.validate() ?? false;
+                            if (formState) {
+                              // Process data
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Processing request...')),
+                              );
+                            }
+                          },
+                          child: const Text(
+                            "Submit Request",
+                            style: TextStyle(fontSize: 16, color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
+            ),
+          ),
+        ],
       ),
+
+
     );
+
   }
 
   // 3) CHAT TAB
-  Widget _buildChatTab(String userId) {
-    // Show any houses that belong to or are accepted by this user
-    final myHouses = mockService.allHouses.where((h) =>
-      h.ownerId == userId || h.acceptedBy == userId
-    ).toList();
-
+  Widget _buildChatTab() {
     if (myHouses.isEmpty) {
       return const SafeArea(
         child: Center(child: Text("No chat available yet.")),
@@ -214,12 +551,13 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
               subtitle: Text(
                   house.isFinished ? "Finished" : (house.acceptedBy == null ? "Not Accepted" : "Ongoing")),
               onTap: () async {
-                // Go to Chat screen
                 await Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => HouseDetailsScreen(house: house, isCustomerView: true)),
                 );
-                setState(() {});
+                setState(() {
+                  _loadData(); // Refresh data after returning
+                });
               },
             ),
           );
@@ -230,7 +568,6 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
 
   // 4) PROFILE TAB
   Widget _buildProfileTab() {
-    final user = mockService.currentUser!;
     return SafeArea(
       child: Container(
         width: double.infinity,
@@ -240,20 +577,19 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
             const SizedBox(height: 16),
             CircleAvatar(
               radius: 50,
-              backgroundImage: NetworkImage(user.pictureUrl),
+              backgroundImage: NetworkImage(userData['pictureUrl']),
             ),
             const SizedBox(height: 16),
             Text(
-              user.name,
+              userData['name'],
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            Text("Contact: ${user.contactNumber}"),
-            Text("Address: ${user.address}"),
+            Text("Contact: ${userData['contactNumber']}"),
+            Text("Address: ${userData['address']}"),
             const SizedBox(height: 8),
-            // Show rating if you want
-            if (user.rating > 0)
-              Text("Rating: ${user.rating.toStringAsFixed(1)}"),
+            if (userData['rating'] > 0)
+              Text("Rating: ${userData['rating'].toStringAsFixed(1)}"),
             const SizedBox(height: 16),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -261,7 +597,7 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
               onPressed: () {
-                mockService.signOut();
+                // Sign out logic
                 Navigator.pushNamedAndRemoveUntil(context, '/welcome', (route) => false);
               },
               child: const Text(

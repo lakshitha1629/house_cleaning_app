@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:house_cleaning_app/services/mock_data_service.dart';
 import 'package:house_cleaning_app/models/house.dart';
 import 'package:house_cleaning_app/screens/house_details_screen.dart';
 
@@ -12,19 +11,36 @@ class CleanerDashboardScreen extends StatefulWidget {
 
 class _CleanerDashboardScreenState extends State<CleanerDashboardScreen> {
   int _selectedIndex = 0;
-  final mockService = MockDataService();
   String filterLocation = '';
   int? filterRooms;
+  
+  // Sample data
+  List<House> availableHouses = [];
+  List<House> ongoingHouses = [];
+  List<Map<String, String>> notifications = [];
+  List<House> myHouses = [];
+  
+  @override
+  void initState() {
+    super.initState();
+    // Initialize with sample data
+    _loadSampleData();
+  }
+  
+  void _loadSampleData() {
+    // This would be replaced with actual data loading in a real app
+    availableHouses = [];
+    ongoingHouses = [];
+    notifications = [];
+    myHouses = [];
+  }
 
   @override
   Widget build(BuildContext context) {
-    final user = mockService.currentUser!;
-    final role = user.role; // "cleaner"
-
     final List<Widget> pages = [
-      _buildHomeTab(user.id, role),
-      _buildNotificationsTab(user.id),
-      _buildChatTab(user.id),
+      _buildHomeTab(),
+      _buildNotificationsTab(),
+      _buildChatTab(),
       _buildProfileTab(),
     ];
 
@@ -48,20 +64,17 @@ class _CleanerDashboardScreenState extends State<CleanerDashboardScreen> {
   }
 
   // 1) HOME TAB
-  Widget _buildHomeTab(String userId, String role) {
-    // Available houses
-    List<House> available = mockService.getAvailableHouses();
+  Widget _buildHomeTab() {
+    // Filter available houses
+    List<House> filteredHouses = availableHouses;
     if (filterLocation.isNotEmpty) {
-      available = available
+      filteredHouses = filteredHouses
           .where((h) => h.location.toLowerCase().contains(filterLocation))
           .toList();
     }
     if (filterRooms != null) {
-      available = available.where((h) => h.rooms == filterRooms).toList();
+      filteredHouses = filteredHouses.where((h) => h.rooms == filterRooms).toList();
     }
-
-    // Ongoing houses
-    final ongoing = mockService.getOngoingHouses(userId, role);
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -115,16 +128,16 @@ class _CleanerDashboardScreenState extends State<CleanerDashboardScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            if (available.isEmpty)
+            if (filteredHouses.isEmpty)
               const Text("No available houses at the moment.")
             else
               SizedBox(
                 height: 200,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  itemCount: available.length,
+                  itemCount: filteredHouses.length,
                   itemBuilder: (context, index) {
-                    final house = available[index];
+                    final house = filteredHouses[index];
                     return _buildAvailableCard(house);
                   },
                 ),
@@ -138,16 +151,16 @@ class _CleanerDashboardScreenState extends State<CleanerDashboardScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            if (ongoing.isEmpty)
+            if (ongoingHouses.isEmpty)
               const Text("No ongoing jobs yet.")
             else
               SizedBox(
                 height: 200,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  itemCount: ongoing.length,
+                  itemCount: ongoingHouses.length,
                   itemBuilder: (context, index) {
-                    final house = ongoing[index];
+                    final house = ongoingHouses[index];
                     return _buildOngoingCard(house);
                   },
                 ),
@@ -192,16 +205,21 @@ class _CleanerDashboardScreenState extends State<CleanerDashboardScreen> {
             children: [
               ElevatedButton(
                 onPressed: () {
-                  mockService.acceptHouse(house.id, mockService.currentUser!.id);
-                  setState(() {});
+                  // Accept house logic
+                  setState(() {
+                    ongoingHouses.add(house);
+                    availableHouses.remove(house);
+                  });
                 },
                 child: const Text("Accept"),
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.grey),
                 onPressed: () {
-                  // Hide (no real logic, just UI)
-                  setState(() {});
+                  // Hide house
+                  setState(() {
+                    availableHouses.remove(house);
+                  });
                 },
                 child: const Text("Hide"),
               ),
@@ -256,18 +274,16 @@ class _CleanerDashboardScreenState extends State<CleanerDashboardScreen> {
   }
 
   // 2) NOTIFICATIONS TAB
-  Widget _buildNotificationsTab(String userId) {
-    final notifs = mockService.getNotificationsForUser(userId);
-
+  Widget _buildNotificationsTab() {
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: notifs.isEmpty
+        child: notifications.isEmpty
             ? const Center(child: Text("No notifications yet."))
             : ListView.builder(
-                itemCount: notifs.length,
+                itemCount: notifications.length,
                 itemBuilder: (context, index) {
-                  final n = notifs[index];
+                  final n = notifications[index];
                   return Card(
                     child: ListTile(
                       title: Text(n['title'] ?? ''),
@@ -281,11 +297,7 @@ class _CleanerDashboardScreenState extends State<CleanerDashboardScreen> {
   }
 
   // 3) CHAT TAB
-  Widget _buildChatTab(String userId) {
-    // Show any houses that are acceptedBy this user, or
-    // we might also show all if we want
-    final myHouses = mockService.allHouses.where((h) => h.acceptedBy == userId || h.ownerId == userId).toList();
-
+  Widget _buildChatTab() {
     if (myHouses.isEmpty) {
       return const SafeArea(
         child: Center(child: Text("No chat available yet.")),
@@ -320,7 +332,6 @@ class _CleanerDashboardScreenState extends State<CleanerDashboardScreen> {
 
   // 4) PROFILE TAB
   Widget _buildProfileTab() {
-    final user = mockService.currentUser!;
     return SafeArea(
       child: Container(
         width: double.infinity,
@@ -328,21 +339,20 @@ class _CleanerDashboardScreenState extends State<CleanerDashboardScreen> {
         child: Column(
           children: [
             const SizedBox(height: 16),
-            CircleAvatar(
+            const CircleAvatar(
               radius: 50,
-              backgroundImage: NetworkImage(user.pictureUrl),
+              backgroundImage: NetworkImage("https://via.placeholder.com/100"),
             ),
             const SizedBox(height: 16),
-            Text(
-              user.name,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            const Text(
+              "John Doe",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            Text("Contact: ${user.contactNumber}"),
-            Text("Address: ${user.address}"),
+            const Text("Contact: +1234567890"),
+            const Text("Address: 123 Main St"),
             const SizedBox(height: 8),
-            if (user.rating > 0)
-              Text("Rating: ${user.rating.toStringAsFixed(1)}"),
+            const Text("Rating: 4.5"),
             const SizedBox(height: 16),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -350,7 +360,6 @@ class _CleanerDashboardScreenState extends State<CleanerDashboardScreen> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
               onPressed: () {
-                mockService.signOut();
                 Navigator.pushNamedAndRemoveUntil(context, '/welcome', (route) => false);
               },
               child: const Text(

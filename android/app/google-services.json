@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "978636082936",
+    "project_id": "house-cleaning-22216",
+    "storage_bucket": "house-cleaning-22216.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:978636082936:android:0008038dac8cc948f1350d",
+        "android_client_info": {
+          "package_name": "com.example.house_cleaning_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBrOK_74hsyxGpfuyGQsM3w4UhRybWB9NY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
