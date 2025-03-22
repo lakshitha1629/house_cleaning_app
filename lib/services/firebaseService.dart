@@ -24,7 +24,8 @@ class FirebaseService {
         password: password,
       );
       if (userCredential.user != null) {
-        final docRef = _firestore.collection('users').doc(userCredential.user!.uid);
+        final docRef =
+            _firestore.collection('users').doc(userCredential.user!.uid);
         final userDoc = await docRef.get();
         if (userDoc.exists) {
           final userData = userDoc.data() as Map<String, dynamic>;
@@ -81,7 +82,8 @@ class FirebaseService {
       );
 
       if (userCredential.user != null) {
-        final docRef = _firestore.collection('users').doc(userCredential.user!.uid);
+        final docRef =
+            _firestore.collection('users').doc(userCredential.user!.uid);
         // Initialize with reviews and ratingValues arrays
         await docRef.set({
           'name': name,
@@ -144,15 +146,17 @@ class FirebaseService {
       flooringType: data['flooringType'] ?? '',
       address: data['address'] ?? '',
       location: data['location'] ?? '',
-      payment: data['payment'] != null ? (data['payment'] as num).toDouble() : 0.0,
+      payment:
+          data['payment'] != null ? (data['payment'] as num).toDouble() : 0.0,
       ownerId: data['ownerId'] ?? '',
-      imageUrls: data['imageUrls'] != null ? List<String>.from(data['imageUrls']) : [],
+      imageUrls:
+          data['imageUrls'] != null ? List<String>.from(data['imageUrls']) : [],
       acceptedBy: data['acceptedBy'],
       isFinished: data['isFinished'] ?? false,
       messages: data['messages'] != null
-          ? List<Map<String, String>>.from(
-              (data['messages'] as List).map((msg) =>
-                  Map<String, String>.from((msg as Map).map((k, v) => MapEntry(k.toString(), v.toString())))))
+          ? List<Map<String, String>>.from((data['messages'] as List).map(
+              (msg) => Map<String, String>.from((msg as Map)
+                  .map((k, v) => MapEntry(k.toString(), v.toString())))))
           : [],
     );
   }
@@ -229,26 +233,28 @@ class FirebaseService {
   }
 
   // ================== GET ONGOING HOUSES ==================
+  // ================== GET ONGOING HOUSES ==================
   Future<List<House>> getOngoingHouses(String userId, String role) async {
     try {
-      late QuerySnapshot query;
       if (role == 'customer') {
-        // Query: ownerId == userId, acceptedBy != null, isFinished == false
-        query = await _firestore
+        // For customers: Query houses by ownerId and isFinished false.
+        // Then filter out houses that are not accepted (acceptedBy == null).
+        final query = await _firestore
             .collection('houses')
             .where('ownerId', isEqualTo: userId)
-            .where('acceptedBy', isNull: false)
             .where('isFinished', isEqualTo: false)
             .get();
+        final houses = query.docs.map((doc) => _houseFromDoc(doc)).toList();
+        return houses.where((h) => h.acceptedBy != null).toList();
       } else {
-        // Cleaner: acceptedBy == userId, isFinished == false
-        query = await _firestore
+        // For cleaner: Query houses where acceptedBy equals userId and isFinished false.
+        final query = await _firestore
             .collection('houses')
             .where('acceptedBy', isEqualTo: userId)
             .where('isFinished', isEqualTo: false)
             .get();
+        return query.docs.map((doc) => _houseFromDoc(doc)).toList();
       }
-      return query.docs.map((doc) => _houseFromDoc(doc)).toList();
     } catch (e) {
       print('Get ongoing houses error: $e');
       return [];
@@ -290,7 +296,8 @@ class FirebaseService {
         final data = houseDoc.data()!;
         final ownerId = data['ownerId'];
         final title = data['title'];
-        final cleanerDoc = await _firestore.collection('users').doc(cleanerId).get();
+        final cleanerDoc =
+            await _firestore.collection('users').doc(cleanerId).get();
         String cleanerName = 'A cleaner';
         if (cleanerDoc.exists) {
           cleanerName = cleanerDoc.data()!['name'] ?? 'A cleaner';
@@ -308,7 +315,8 @@ class FirebaseService {
   }
 
   // ================== GET NOTIFICATIONS ==================
-  Future<List<Map<String, dynamic>>> getNotificationsForUser(String userId) async {
+  Future<List<Map<String, dynamic>>> getNotificationsForUser(
+      String userId) async {
     try {
       final snapshot = await _firestore
           .collection('notifications')
@@ -360,26 +368,32 @@ class FirebaseService {
   }
 
   // ================== REVIEWS ==================
-  Future<void> addReviewToUser(String userId, String review, double rating) async {
+  Future<void> addReviewToUser(
+      String userId, String review, double rating) async {
     try {
       final userRef = _firestore.collection('users').doc(userId);
       final userSnap = await userRef.get();
       if (!userSnap.exists) return;
       final data = userSnap.data() as Map<String, dynamic>;
-      final existingReviews = data['reviews'] != null ? List<String>.from(data['reviews']) : [];
+      final existingReviews =
+          data['reviews'] != null ? List<String>.from(data['reviews']) : [];
       final existingRatingValues = data['ratingValues'] != null
           ? (data['ratingValues'] as List).map((v) => v as double).toList()
           : [];
       existingReviews.add(review);
       existingRatingValues.add(rating);
-      final double sum = existingRatingValues.fold(0.0, (acc, val) => acc + val);
-      final double newAverageRating = existingRatingValues.isEmpty ? 0.0 : sum / existingRatingValues.length;
+      final double sum =
+          existingRatingValues.fold(0.0, (acc, val) => acc + val);
+      final double newAverageRating = existingRatingValues.isEmpty
+          ? 0.0
+          : sum / existingRatingValues.length;
       await userRef.update({
         'reviews': existingReviews,
         'ratingValues': existingRatingValues,
         'rating': newAverageRating,
       });
-      print('Successfully added review "$review" with rating $rating to user $userId');
+      print(
+          'Successfully added review "$review" with rating $rating to user $userId');
     } catch (e) {
       print('Add review to user error: $e');
       rethrow;

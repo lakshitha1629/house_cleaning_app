@@ -119,7 +119,7 @@ class _CleanerDashboardScreenState extends State<CleanerDashboardScreen> {
     );
   }
 
-  // 1) HOME TAB
+  // -------------------- HOME TAB --------------------
   Widget _buildHomeTab() {
     // Filter available houses
     List<House> filteredHouses = availableHouses;
@@ -252,7 +252,7 @@ class _CleanerDashboardScreenState extends State<CleanerDashboardScreen> {
               child: Image.network(
                 house.imageUrls.isNotEmpty
                     ? house.imageUrls.first
-                    : 'https://via.placeholder.com/400?text=No+Image',
+                    : 'https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg',
                 fit: BoxFit.cover,
                 width: double.infinity,
               ),
@@ -319,7 +319,7 @@ class _CleanerDashboardScreenState extends State<CleanerDashboardScreen> {
                 child: Image.network(
                   house.imageUrls.isNotEmpty
                       ? house.imageUrls.first
-                      : 'https://via.placeholder.com/400?text=No+Image',
+                      : 'https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg',
                   fit: BoxFit.cover,
                   width: double.infinity,
                 ),
@@ -361,7 +361,7 @@ class _CleanerDashboardScreenState extends State<CleanerDashboardScreen> {
     }
   }
 
-  // 2) NOTIFICATIONS TAB
+  // -------------------- NOTIFICATIONS TAB --------------------
   Widget _buildNotificationsTab() {
     return SafeArea(
       child: RefreshIndicator(
@@ -385,36 +385,42 @@ class _CleanerDashboardScreenState extends State<CleanerDashboardScreen> {
     );
   }
 
-  // 3) CHAT TAB
+  // -------------------- CHAT TAB --------------------
   Widget _buildChatTab() {
     return SafeArea(
       child: RefreshIndicator(
         onRefresh: _fetchData,
         child: myHouses.isEmpty
-            ? const Center(child: Text("No chat available yet."))
+            ? const Center(child: Text("No chats available yet."))
             : ListView.builder(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(16),
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
                 itemCount: myHouses.length,
                 itemBuilder: (context, index) {
                   final house = myHouses[index];
-                  final status = house.isFinished
-                      ? "Finished"
-                      : (house.acceptedBy == null ? "Not Accepted" : "Ongoing");
+                  final status = house.isFinished ? "Finished" : "Ongoing";
                   return Card(
+                    margin: const EdgeInsets.only(bottom: 12),
                     child: ListTile(
+                      leading: Image.network(
+                        house.imageUrls.isNotEmpty
+                            ? house.imageUrls.first
+                            : 'https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg',
+                        width: 60,
+                        height: 60,
+                        fit: BoxFit.cover,
+                      ),
                       title: Text(house.title),
-                      subtitle: Text(status),
+                      subtitle: Text("Chat - $status"),
+                      trailing: const Icon(Icons.chat),
                       onTap: () async {
-                        // Go to House Details
                         await Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => HouseDetailsScreen(
-                                house: house, isCustomerView: false),
+                            builder: (_) => ChatScreen(house: house),
                           ),
                         );
-                        setState(() {});
+                        _fetchData();
                       },
                     ),
                   );
@@ -431,10 +437,13 @@ class _CleanerDashboardScreenState extends State<CleanerDashboardScreen> {
       return const Center(child: Text("No user signed in."));
     }
     final name = user.name.isEmpty ? 'No Name' : user.name;
-    final contact = user.contactNumber.isEmpty ? 'No Contact' : user.contactNumber;
+    final contact =
+        user.contactNumber.isEmpty ? 'No Contact' : user.contactNumber;
     final address = user.address.isEmpty ? 'No Address' : user.address;
     final ratingValue = user.rating;
-    final pictureUrl = user.pictureUrl.isNotEmpty ? user.pictureUrl : 'https://via.placeholder.com/100';
+    final pictureUrl = user.pictureUrl.isNotEmpty
+        ? user.pictureUrl
+        : 'https://via.placeholder.com/100';
 
     return SafeArea(
       child: Container(
@@ -461,15 +470,18 @@ class _CleanerDashboardScreenState extends State<CleanerDashboardScreen> {
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.black54,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8)),
               ),
               onPressed: () async {
                 await firebaseService.signOut();
                 if (mounted) {
-                  Navigator.pushNamedAndRemoveUntil(context, '/welcome', (route) => false);
+                  Navigator.pushNamedAndRemoveUntil(
+                      context, '/welcome', (route) => false);
                 }
               },
-              child: const Text("Log Out", style: TextStyle(color: Colors.white)),
+              child:
+                  const Text("Log Out", style: TextStyle(color: Colors.white)),
             ),
           ],
         ),

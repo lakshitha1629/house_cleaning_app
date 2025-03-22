@@ -2,15 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:house_cleaning_app/models/house.dart';
 import 'package:house_cleaning_app/screens/add_house_screen.dart';
 import 'package:house_cleaning_app/screens/house_details_screen.dart';
-import 'package:house_cleaning_app/services/firebaseService.dart';
 import 'package:house_cleaning_app/screens/chat_screen.dart';
+import 'package:house_cleaning_app/services/firebaseService.dart';
 
 class CustomerDashboardScreen extends StatefulWidget {
   const CustomerDashboardScreen({Key? key}) : super(key: key);
 
   @override
-  State<CustomerDashboardScreen> createState() =>
-      _CustomerDashboardScreenState();
+  State<CustomerDashboardScreen> createState() => _CustomerDashboardScreenState();
 }
 
 class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
@@ -19,7 +18,7 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
   // Houses loaded from Firebase
   List<House> ongoingHouses = [];
   List<House> completedHouses = [];
-  List<House> allPosts = []; // All houses posted by the customer
+  List<House> allPosts = [];   // All houses posted by the customer
   List<House> chatHouses = []; // Houses with an active chat (accepted)
 
   bool _isLoading = false;
@@ -48,21 +47,13 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
       setState(() => _isLoading = false);
       return;
     }
-
     try {
-      // Fetch ongoing houses for this customer (ownerId == user.id, acceptedBy != null, not finished)
-      final loadedOngoing =
-          await firebaseService.getOngoingHouses(user.id, 'customer');
-      // Fetch completed houses for this customer (ownerId == user.id, isFinished == true)
-      final loadedCompleted =
-          await firebaseService.getCompletedHouses(user.id, 'customer');
-      // All posts: houses where ownerId == user.id
+      final loadedOngoing = await firebaseService.getOngoingHouses(user.id, 'customer');
+      final loadedCompleted = await firebaseService.getCompletedHouses(user.id, 'customer');
       final loadedPosts = (await firebaseService.getAllHouses())
           .where((h) => h.ownerId == user.id)
           .toList();
-      // Chat houses: posts with acceptedBy != null
-      final loadedChat =
-          loadedPosts.where((h) => h.acceptedBy != null).toList();
+      final loadedChat = loadedPosts.where((h) => h.acceptedBy != null).toList();
 
       print("Loaded ${loadedOngoing.length} ongoing houses");
       print("Loaded ${loadedCompleted.length} completed houses");
@@ -99,7 +90,6 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : pages[_selectedIndex],
-      // Floating action button visible on Home tab
       floatingActionButton: _selectedIndex == 0
           ? FloatingActionButton(
               onPressed: () async {
@@ -139,7 +129,6 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Hero banner image
             Image.asset(
               "assets/living.jpg",
               width: double.infinity,
@@ -199,11 +188,10 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
         await Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) =>
-                HouseDetailsScreen(house: house, isCustomerView: true),
+            builder: (_) => HouseDetailsScreen(house: house, isCustomerView: true),
           ),
         );
-        _fetchData(); // Refresh data after returning
+        _fetchData();
       },
       child: Container(
         width: 180,
@@ -216,15 +204,13 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // House image
             Expanded(
               child: ClipRRect(
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(12)),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
                 child: Image.network(
                   house.imageUrls.isNotEmpty
                       ? house.imageUrls.first
-                      : 'https://via.placeholder.com/400?text=No+Image',
+                      : 'https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg',
                   fit: BoxFit.cover,
                   width: double.infinity,
                 ),
@@ -281,7 +267,7 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
                       leading: Image.network(
                         house.imageUrls.isNotEmpty
                             ? house.imageUrls.first
-                            : 'https://via.placeholder.com/100?text=No+Image',
+                            : 'https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg',
                         width: 60,
                         height: 60,
                         fit: BoxFit.cover,
@@ -290,16 +276,14 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
                       subtitle: Text("Status: $status"),
                       trailing: Icon(
                         Icons.flag,
-                        color: house.acceptedBy != null
-                            ? Colors.green
-                            : Colors.red,
+                        color: house.acceptedBy != null ? Colors.green : Colors.red,
                       ),
                       onTap: () async {
                         await Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (_) => HouseDetailsScreen(
-                                  house: house, isCustomerView: true)),
+                            builder: (_) => HouseDetailsScreen(house: house, isCustomerView: true),
+                          ),
                         );
                         _fetchData();
                       },
@@ -315,36 +299,25 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
 
   // -------------------- CHAT TAB --------------------
   Widget _buildChatTab() {
-    return RefreshIndicator(
-      onRefresh: _fetchData,
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "Chats",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            if (chatHouses.isEmpty)
-              const Text("No chats available yet.")
-            else
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
+    return SafeArea(
+      child: RefreshIndicator(
+        onRefresh: _fetchData,
+        child: chatHouses.isEmpty
+            ? const Center(child: Text("No chats available yet."))
+            : ListView.builder(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(16),
                 itemCount: chatHouses.length,
                 itemBuilder: (context, index) {
                   final house = chatHouses[index];
-                  String status = house.isFinished ? "Finished" : "Ongoing";
+                  final status = house.isFinished ? "Finished" : "Ongoing";
                   return Card(
                     margin: const EdgeInsets.only(bottom: 12),
                     child: ListTile(
                       leading: Image.network(
                         house.imageUrls.isNotEmpty
                             ? house.imageUrls.first
-                            : 'https://via.placeholder.com/100?text=No+Image',
+                            : 'https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg',
                         width: 60,
                         height: 60,
                         fit: BoxFit.cover,
@@ -353,7 +326,7 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
                       subtitle: Text("Chat - $status"),
                       trailing: const Icon(Icons.chat),
                       onTap: () async {
-                        // Instead of going to HouseDetailsScreen, you might want to go directly to ChatScreen:
+                        // Open ChatScreen for a real-time conversation.
                         await Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -366,8 +339,6 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
                   );
                 },
               ),
-          ],
-        ),
       ),
     );
   }
