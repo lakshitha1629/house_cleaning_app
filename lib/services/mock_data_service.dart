@@ -214,7 +214,7 @@ class MockDataService {
       payment: payment,
       ownerId: currentUser!.id,
       imageUrls: [
-        'https://via.placeholder.com/400?text=House${_houses.length + 1}A',
+        'https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg',
       ],
     );
     _houses.add(newHouse);

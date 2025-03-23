@@ -189,7 +189,7 @@ class FirebaseService {
         'location': location,
         'payment': payment,
         'ownerId': currentUser!.id,
-        'imageUrls': ['https://via.placeholder.com/400?text=NewHouse'],
+        'imageUrls': ['https://media-cdn.tripadvisor.com/media/photo-s/2c/b0/b6/2b/apartment-hotels.jpg'],
         'acceptedBy': null,
         'isFinished': false,
         'messages': [],
@@ -208,7 +208,7 @@ class FirebaseService {
         location: location,
         payment: payment,
         ownerId: currentUser!.id,
-        imageUrls: ['https://via.placeholder.com/400?text=NewHouse'],
+        imageUrls: ['https://media-cdn.tripadvisor.com/media/photo-s/2c/b0/b6/2b/apartment-hotels.jpg'],
       );
       return newHouse;
     } catch (e) {
@@ -232,7 +232,6 @@ class FirebaseService {
     }
   }
 
-  // ================== GET ONGOING HOUSES ==================
   // ================== GET ONGOING HOUSES ==================
   Future<List<House>> getOngoingHouses(String userId, String role) async {
     try {

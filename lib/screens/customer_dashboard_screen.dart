@@ -353,7 +353,7 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
     final contact = user.contactNumber.isEmpty ? 'No Contact' : user.contactNumber;
     final address = user.address.isEmpty ? 'No Address' : user.address;
     final ratingValue = user.rating;
-    final pictureUrl = user.pictureUrl.isNotEmpty ? user.pictureUrl : 'https://via.placeholder.com/100';
+    final pictureUrl = user.pictureUrl.isNotEmpty ? user.pictureUrl : 'https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg';
 
     return SafeArea(
       child: Container(

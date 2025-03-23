@@ -443,7 +443,7 @@ class _CleanerDashboardScreenState extends State<CleanerDashboardScreen> {
     final ratingValue = user.rating;
     final pictureUrl = user.pictureUrl.isNotEmpty
         ? user.pictureUrl
-        : 'https://via.placeholder.com/100';
+        : 'https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg';
 
     return SafeArea(
       child: Container(
