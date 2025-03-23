@@ -121,20 +121,30 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
 
   // -------------------- HOME TAB --------------------
   Widget _buildHomeTab() {
-    return RefreshIndicator(
+    return Scaffold(
+      appBar: AppBar(
+      title: const Text("Customer Dashboard", style: TextStyle(
+      color: Colors.white,
+      fontSize: 20,
+      fontWeight: FontWeight.bold,
+      ),),
+      centerTitle: true,
+      backgroundColor: const Color(0xFF503CB7),
+      ),
+      body: RefreshIndicator(
       onRefresh: _fetchData,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Image.asset(
-              "assets/living.jpg",
-              width: double.infinity,
-              height: 200,
-              fit: BoxFit.cover,
-            ),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Image.asset(
+          "assets/living.jpg",
+          width: double.infinity,
+          height: 200,
+          fit: BoxFit.cover,
+          ),
             const SizedBox(height: 16),
             const Text(
               "Ongoing Cleanings",
@@ -178,6 +188,7 @@ class _CustomerDashboardScreenState extends State<CustomerDashboardScreen> {
           ],
         ),
       ),
+    ),
     );
   }
 

@@ -97,6 +97,15 @@ class _SignInScreenState extends State<SignInScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                Container(
+                height: 200,
+                alignment: Alignment.center,
+                child: Image.network(
+                  'https://cdni.iconscout.com/illustration/premium/thumb/cleaning-service-workers-illustration-download-in-svg-png-gif-file-formats--house-couple-pack-services-illustrations-3932693.png',
+                  fit: BoxFit.contain,
+                ),
+              ),
+              const SizedBox(height: 10),
                 const Text(
                   'Welcome Back',
                   style: TextStyle(
@@ -160,16 +169,7 @@ class _SignInScreenState extends State<SignInScreen> {
                 ),
                 
                 const SizedBox(height: 8),
-                // Forgot password
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () {
-                      // Implement forgot password functionality
-                    },
-                    child: const Text('Forgot Password?'),
-                  ),
-                ),
+              
                 
                 const SizedBox(height: 24),
                 // Sign In button

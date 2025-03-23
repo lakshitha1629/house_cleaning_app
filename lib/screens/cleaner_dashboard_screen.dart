@@ -132,8 +132,22 @@ class _CleanerDashboardScreenState extends State<CleanerDashboardScreen> {
       filteredHouses =
           filteredHouses.where((h) => h.rooms == filterRooms).toList();
     }
+    
 
-    return SafeArea(
+    return Scaffold(
+      appBar: AppBar(
+      backgroundColor: const Color(0xFF503CB7),
+      title: Center(
+        child: const Text(
+          "Cleaner Dashboard",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white
+            ),
+        ),
+      ),
+      ),
+      body: SafeArea(
       child: RefreshIndicator(
         onRefresh: _fetchData,
         child: SingleChildScrollView(
@@ -229,6 +243,7 @@ class _CleanerDashboardScreenState extends State<CleanerDashboardScreen> {
           ),
         ),
       ),
+    ),
     );
   }
 

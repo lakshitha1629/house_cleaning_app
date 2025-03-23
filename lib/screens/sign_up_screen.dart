@@ -111,9 +111,36 @@ class _SignUpScreenState extends State<SignUpScreen> {
       appBar: AppBar(
         title: const Text('Create Account'),
       ),
+
       body: SafeArea(
+       
         child: SingleChildScrollView(
-          child: Padding(
+          child: Column(
+            children: [
+              // Top image or illustration
+              Container(
+                height: 200,
+                alignment: Alignment.center,
+                child: Image.network(
+                  'https://cdni.iconscout.com/illustration/premium/thumb/cleaning-man-clean-house-floor-with-broomstick-illustration-download-in-svg-png-gif-file-formats--woman-cleaner-pack-services-illustrations-3322070.png',
+                  fit: BoxFit.contain,
+                ),
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                "Create Account",
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                "Sign up to get started",
+                style: TextStyle(color: Colors.grey),
+              ),
+              const SizedBox(height: 20), 
+          Padding(
             padding: const EdgeInsets.all(16.0),
             child: Form(
               key: _formKey,
@@ -332,9 +359,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
               ),
             ),
           ),
-        ),
+            ],
+          ),
       ),
+    ),
     );
+    
   }
   
   @override
