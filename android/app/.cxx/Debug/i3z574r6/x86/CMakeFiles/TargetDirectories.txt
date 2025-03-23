@@ -1,0 +1,2 @@
+D:/Project/house_cleaning_app/android/app/.cxx/Debug/i3z574r6/x86/CMakeFiles/edit_cache.dir
+D:/Project/house_cleaning_app/android/app/.cxx/Debug/i3z574r6/x86/CMakeFiles/rebuild_cache.dir
